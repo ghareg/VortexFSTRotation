@@ -21,7 +21,7 @@ public:
 	Occup orb() const {return morb;}
 	Occup l() const {return ml;}
 	Occup j() const {return mj;}
-	
+
 private:
 	Occup mph;
 	Occup ms;

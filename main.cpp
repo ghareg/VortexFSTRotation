@@ -49,7 +49,7 @@ int main(void)
 	MatType* evecs = new MatType[neigs * bSize];
 	GenMatProd op;
 	FILE* evalFile;
-	evalFile = fopen("EndepMul10j300R5000xi3.dat", "a");
+	evalFile = fopen("EndepMul10j300R5000xi32.dat", "w");
 	double mu = 50.0;
 	double muEnd = 65.0;
 	double dmu = 0.2;
@@ -59,6 +59,8 @@ int main(void)
 			calcFullMat(baseHam, basis, bSize, inVal, mu, zeroBased);
 			op.init(baseHam);
 			matrixCons = true;
+			fprintf(evalFile, "Construction done");
+			fflush(evalFile);
 		}
 		else {
 			changeFullUMat(baseHam, dmu, zeroBased);
@@ -78,7 +80,6 @@ int main(void)
 	}
 	
 	fclose(evalFile);
-
 	free(baseHam, inVal, evalues, evecs);
 }
 

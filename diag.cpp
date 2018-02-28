@@ -2,7 +2,7 @@
 
 extern "C" {
 
-void znaupd_(int* ido, char* bmat, int* n, char* which, int* nev, double* tol, void* resid, 
+void znaupd_(int* ido, char* bmat, int* n, char* which, int* nev, double* tol, void* resid,
 		int* ncv, void* v, int* ldv, int* iparam, int* ipntr, void* workd,
 	   	void* workl, int* lworkl, double* rwork, int* info);
 
