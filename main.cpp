@@ -49,9 +49,9 @@ int main(void)
 	MatType* evecs = new MatType[neigs * bSize];
 	GenMatProd op;
 	FILE* evalFile;
-	evalFile = fopen("EndepMul10j300R5000xi32.dat", "w");
+	evalFile = fopen("EndepMul10j300R5000xi34.dat", "w");
 	double mu = 50.0;
-	double muEnd = 65.0;
+	double muEnd = 50.0;
 	double dmu = 0.2;
 	while (mu <= muEnd) {
 		fprintf(evalFile, "%.6f\t", mu);

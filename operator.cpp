@@ -4,7 +4,7 @@
 #include <gsl/gsl_sf_bessel.h>
 #include <gsl/gsl_integration.h>
 
-MatType MatElement(Count i, Count j, const State* basis, const InitVal& inVal, double mu)
+MatType MatElement(Count i, Count j, const State* basis, const InitVal& inVal, double mu, double rot)
 {
 	Occup ph = basis[i].ph();
 	Occup s = basis[i].s();
@@ -21,6 +21,7 @@ MatType MatElement(Count i, Count j, const State* basis, const InitVal& inVal, d
 		if (s == sp) {
 			if (l == lp && jc == jcp) {
 					result += MatType(-ph * EnDiag(orb, orbp, l, jc, s, mu, inVal), 0.0);
+					result += -ph * 1.0 * RotationDiag(orb, orbp, l, jc, rot, inVal);
 			}
 			result += MatType(-ph * EnNonDiag(orb, orbp, l, lp, jc, jcp, inVal), 0.0);
 		}
@@ -172,6 +173,35 @@ double Super(int ph, int orb, int orbp, int l, int lp, int jc, int jcp, const In
 	}
 
 	return 0.0;
+}
+
+MatType RotationDiag(int orb, int orbp, int l, int jc, double rot, const InitVal& inVal)
+{
+	if (orb == orbp) {
+		int la = std::abs(l);
+		double alphap = inVal.BesselZeros[la * jmax + j];
+		if (orb == 0) {
+			return MatType(0.25 * t1z * c * c * rot * rot * Rm2 * alphap * alphap, 0.0);
+		}
+		else if (orb == 1 || orb == 2) {
+			return MatType(0.25 * t2z * c * c * rot * rot * Rm2 * alphap * alphap, 0.0);
+		}
+		else {
+			return MatType(0.25 * t4z * c * c * rot * rot * Rm2 * alphap * alphap, 0.0);
+		}
+	}
+	else if ((orb == 0 && orbp == 1) || (orb == 2 && orbp == 0)) {
+		int la = std::abs(l);
+		double alphap = inVal.BesselZeros[la * jmax + j];
+		return MatType(0.0, 0.5 * Gamma * c * rot * Rm2 * alphap * alphap;
+	}
+	else if ((orb == 0 && orbp == 2) || (orb == 1 && orbp == 0)) {
+		int la = std::abs(l);
+		double alphap = inVal.BesselZeros[la * jmax + j];
+		return MatType(0.0, -0.5 * Gamma * c * rot * Rm2 * alphap * alphap;
+	}
+
+	return MatType(0.0, 0.0);
 }
 
 double IntB (double r, void *paramsIntB)
