@@ -23,6 +23,8 @@ GenMatProd::GenMatProd()
 	iparm_[26] = 1;
 	iparm_[27] = 0;
 	iparm_[23] = 1;
+	iparm_[10] = 1;
+	iparm_[12] = 1;
 	set_shift(shift);
 }
 
@@ -52,6 +54,7 @@ void GenMatProd::perform_op(const MatType* xIn, MatType* yOut)
 
 	pardiso(pt_, &maxfct, &mnum, &mtype_, &phase_, &n, (void*) baseHam_.mat, baseHam_.ia, baseHam_.ja, 
 			perm_, &nrhs, iparm_, &msglvl, (void*) xIn, (void*) yOut, &error);
+//	std::cout << error << std::endl;
 	phase_ = 33;
 }
 
@@ -93,7 +96,7 @@ void calcEValues(const SparseMat& baseHam, GenMatProd& op, double* evalues, MatT
 	nev = neigs;
 	ncv = 3 * neigs + 1;
 	lworkl  = 3 * ncv * ncv + 5 * ncv;
-	tol    = 1E-8;
+	tol    = 1E-6;
 	ido    = 0;
 	info   = 0;
 	

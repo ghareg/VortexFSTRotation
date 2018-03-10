@@ -244,7 +244,7 @@ double IntTan(int l, int lp, double alpha, double alphap)
 
 double FR(int l, int lp, int j, int jp, double alpha, double alphap)
 {
-	if (l == lp) {
+	if (abs(l) == abs(lp)) {
 		if (j == jp) {
 			double BesselJ = gsl_sf_bessel_Jn(l + 1, alpha);
 			return 0.5 * BesselJ * BesselJ;

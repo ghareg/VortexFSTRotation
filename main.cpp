@@ -43,23 +43,26 @@ int main(void)
 	GenerateSupIntParallel(inVal.supInt, supIntSize, inVal.BesselZeros, 2);
 
 	SparseMat baseHam;
+	SparseMat baseFHam;
 	bool zeroBased = false;
 	bool matrixCons = false;
 	double* evalues = new double[neigs];
 	MatType* evecs = new MatType[neigs * bSize];
 	GenMatProd op;
 	FILE* evalFile;
-	evalFile = fopen("EndepMul10j300R5000xi32.dat", "w");
-	double mu = 50.0;
-	double muEnd = 65.0;
-	double dmu = 0.2;
+	evalFile = fopen("EndepMul10j300R5000xi3C4mi.dat", "w");
+	double mu = 40.0;
+	double muEnd = 51.0;
+	double dmu = 0.025;
 	while (mu <= muEnd) {
 		fprintf(evalFile, "%.6f\t", mu);
 		if (!matrixCons) {
 			calcFullMat(baseHam, basis, bSize, inVal, mu, zeroBased);
+			//diagtoFullMat(baseFHam, baseHam, zeroBased);
+			//writeMatrixToFile(baseFHam, zeroBased);
 			op.init(baseHam);
 			matrixCons = true;
-			fprintf(evalFile, "Construction done");
+			//fprintf(evalFile, "Construction done");
 			fflush(evalFile);
 		}
 		else {
@@ -81,6 +84,7 @@ int main(void)
 	
 	fclose(evalFile);
 	free(baseHam, inVal, evalues, evecs);
+	freeN(baseFHam);
 }
 
 void GenerateBesselZeros(double*& BesselZeros, Count& BesselSize)

@@ -37,4 +37,9 @@ void initStartEnd(SparseMat* baseHamMat, Count bSize);
 void joinMat(SparseMat& MatFull, const SparseMat* MatArray, Count bSize, bool zeroBased);
 void calcFullMat(SparseMat& baseHam, const State* basis, Count bSize, const InitVal& inVal, double mu, bool zeroBased);
 void changeFullUMat(SparseMat& baseHam, double dmu, bool zeroBased);
+
+void diagtoFullMat(SparseMat& MatFull, SparseMat& MatUFull, bool zeroBased);
+void writeMatrixToFile(const SparseMat& baseHam, bool zeroBased);
+Count DiagValueIndex(Count rowNum, const SparseMat& baseHam, bool zeroBased);
+void changeFullMat(SparseMat& baseHam, double dmu, bool zeroBased);
 #endif

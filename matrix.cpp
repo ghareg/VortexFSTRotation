@@ -131,3 +131,101 @@ void changeFullUMat(SparseMat& baseHam, double dmu, bool zeroBased)
 	}
 }
 
+void diagtoFullMat(SparseMat& MatFull, SparseMat& MatUFull, bool zeroBased)
+{
+	const int add = zeroBased ? 0 : 1;
+	const Count nimbsize = MatUFull.end - MatUFull.start;
+	const Count USize = MatUFull.ia[nimbsize] - add;
+	SparseMat MatDFull;
+	MatDFull.mat = new MatType[USize];
+	MatDFull.ja = new Count[USize];
+	MatDFull.ia = new Count[nimbsize + 1];
+	MKL_INT job[6];
+	job[0] = 1;
+	job[1] = add;
+	job[2] = add;
+	job[5] = 1;
+	const MKL_INT n = nimbsize;
+	MKL_INT info;
+	mkl_zcsrcsc (job, &n , MatDFull.mat, MatDFull.ja , MatDFull.ia , MatUFull.mat, MatUFull.ja , MatUFull.ia , &info);
+	for (Count i = 0; i < USize; ++i) {
+		MatDFull.mat[i] = std::conj(MatDFull.mat[i]);
+	}
+	for (Count i = 0; i < nimbsize; ++i) {
+		MatUFull.mat[MatUFull.ia[i] - add] = MatType(0.0, 0.0);
+	}
+	Count Size = 2 * (USize - nimbsize) + nimbsize;
+	MatFull.mat = new MatType[Size];
+	MatFull.ja = new Count[Size];
+	MatFull.ia = new Count[nimbsize + 1];
+	MatFull.start = MatUFull.start;
+	MatFull.end = MatUFull.end;
+	const char trans = 'N';
+	MKL_INT request = 0;
+	MatType beta = MatType(1.0, 0.0);
+	const MKL_INT nzmax = Size;
+	MKL_INT sort = 0;
+	mkl_zcsradd (&trans, &request, &sort, &n , &n , MatUFull.mat, MatUFull.ja, MatUFull.ia, &beta, MatDFull.mat, MatDFull.ja, MatDFull.ia, MatFull.mat, MatFull.ja, MatFull.ia, &nzmax, &info);
+	/*delete[] MatUFull.mat;
+	delete[] MatUFull.ia;
+	delete[] MatUFull.ja;*/
+	delete[] MatDFull.mat;
+	delete[] MatDFull.ia;
+	delete[] MatDFull.ja;
+}
+
+void writeMatrixToFile(const SparseMat& baseHam, bool zeroBased)
+{
+	std::ofstream matfile;
+	std::ofstream iafile;
+	std::ofstream jafile;
+	matfile.open("mat.dat");
+	iafile.open("ia.dat");
+	jafile.open("ja.dat");
+	Count add = zeroBased ? 0 : 1;
+	for (Count i = 0; i < baseHam.ia[baseHam.end - baseHam.start] - add; ++i) {
+		if (baseHam.mat[i].imag() < 0) {
+			matfile << baseHam.mat[i].real() << baseHam.mat[i].imag() << "j" << std::endl;
+		}
+		else {
+			matfile << baseHam.mat[i].real() << "+" << baseHam.mat[i].imag() << "j" << std::endl;
+		}
+		jafile << baseHam.ja[i] - add << std::endl;
+	}
+
+	for (Count i = 0; i <= baseHam.end - baseHam.start; ++i) {
+		iafile << baseHam.ia[i] - add << std::endl;
+	}
+	matfile.close();
+	iafile.close();
+	jafile.close();
+}
+
+Count DiagValueIndex(Count rowNum, const SparseMat& baseHam, bool zeroBased)
+{
+	Count add = zeroBased ? 0 : 1;
+	Count rowStart = baseHam.ia[rowNum] - add;
+	Count rowEnd = baseHam.ia[rowNum + 1] - add;
+	Count* posStart = &baseHam.ja[rowStart];
+	Count* posEnd = &baseHam.ja[rowEnd];
+	Count* pos = std::lower_bound(posStart, posEnd, rowNum + add);
+	if (*pos == rowNum + add && pos != posEnd) {
+		return rowStart + (pos - posStart);
+	}
+
+	return -1;
+}
+
+void changeFullMat(SparseMat& baseHam, double dmu, bool zeroBased)
+{
+	Count Size = baseHam.end - baseHam.start;
+	#pragma omp parallel for
+	for (Count i = 0; i < Size / 2; ++i) {
+		baseHam.mat[DiagValueIndex(i, baseHam, zeroBased)] += MatType(-dmu, 0.0);
+	}
+	#pragma omp parallel for
+	for (Count i = Size / 2; i < Size; ++i) {
+		baseHam.mat[DiagValueIndex(i, baseHam, zeroBased)] += MatType(dmu, 0.0);
+	}
+}
+
