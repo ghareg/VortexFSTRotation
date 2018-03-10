@@ -48,18 +48,20 @@ int main(void)
 	double* evalues = new double[neigs];
 	MatType* evecs = new MatType[neigs * bSize];
 	GenMatProd op;
+	double ang = 10.0;
+	double rot = std::tan(ang * Pi / 180);
 	FILE* evalFile;
-	evalFile = fopen("EndepMul10j300R5000xi34.dat", "w");
-	double mu = 50.0;
-	double muEnd = 50.0;
-	double dmu = 0.2;
+	evalFile = fopen("EndepMul10j300R5000xi3rot10.dat", "w");
+	double mu = 40.0;
+	double muEnd = 51.0;
+	double dmu = 0.05;
 	while (mu <= muEnd) {
 		fprintf(evalFile, "%.6f\t", mu);
 		if (!matrixCons) {
-			calcFullMat(baseHam, basis, bSize, inVal, mu, zeroBased);
+			calcFullMat(baseHam, basis, bSize, inVal, mu, rot, zeroBased);
 			op.init(baseHam);
 			matrixCons = true;
-			fprintf(evalFile, "Construction done");
+			//fprintf(evalFile, "Construction done");
 			fflush(evalFile);
 		}
 		else {

@@ -32,9 +32,9 @@ void resize(arrayT*& mat, Count currSize, Count newSize)
 	delete[] oldmat;
 }
 
-void calcMat(SparseMat& baseHam, const State* basis, Count bSize, const InitVal& inVal, double mu);
+void calcMat(SparseMat& baseHam, const State* basis, Count bSize, const InitVal& inVal, double mu, double rot);
 void initStartEnd(SparseMat* baseHamMat, Count bSize);
 void joinMat(SparseMat& MatFull, const SparseMat* MatArray, Count bSize, bool zeroBased);
-void calcFullMat(SparseMat& baseHam, const State* basis, Count bSize, const InitVal& inVal, double mu, bool zeroBased);
+void calcFullMat(SparseMat& baseHam, const State* basis, Count bSize, const InitVal& inVal, double mu, double rot, bool zeroBased);
 void changeFullUMat(SparseMat& baseHam, double dmu, bool zeroBased);
 #endif

@@ -10,7 +10,7 @@
 #include <cstdlib>
 #include <fstream>
 
-void calcMat(SparseMat& baseHam, const State* basis, Count bSize, const InitVal& inVal, double mu)
+void calcMat(SparseMat& baseHam, const State* basis, Count bSize, const InitVal& inVal, double mu, double rot)
 {
 	Count start =  baseHam.start;
 	Count end = baseHam.end;
@@ -23,7 +23,7 @@ void calcMat(SparseMat& baseHam, const State* basis, Count bSize, const InitVal&
 	Count currHNum = 0;
 	for (Count i = start; i < end; ++i) {
 		for (Count j = i; j < bSize; ++j) {
-			matel = MatElement(i, j, basis, inVal, mu);
+			matel = MatElement(i, j, basis, inVal, mu, rot);
 			if (j == i) {
 				baseHam.ia[i - start] = currHNum;
 			}
@@ -99,16 +99,16 @@ void joinMat(SparseMat& MatFull, const SparseMat* MatArray, Count bSize, bool ze
 	MatFull.end = bSize;
 }
 
-void calcFullMat(SparseMat& baseHam, const State* basis, Count bSize, const InitVal& inVal, double mu, bool zeroBased)
+void calcFullMat(SparseMat& baseHam, const State* basis, Count bSize, const InitVal& inVal, double mu, double rot, bool zeroBased)
 {
 	SparseMat baseHamMat[nCore];
 	initStartEnd(baseHamMat, bSize);
 	std::thread t[nCore - 1];
 	for (int i = 0; i < nCore - 1; ++i) {
-		t[i] = std::thread(calcMat, std::ref(baseHamMat[i]), basis, bSize, std::ref(inVal), mu);
+		t[i] = std::thread(calcMat, std::ref(baseHamMat[i]), basis, bSize, std::ref(inVal), mu, rot);
 	}
 	
-	calcMat(baseHamMat[nCore - 1], basis, bSize, std::ref(inVal), mu);
+	calcMat(baseHamMat[nCore - 1], basis, bSize, std::ref(inVal), mu, rot);
 
 	for (int i = 0; i < nCore - 1; ++i) {
 		t[i].join();

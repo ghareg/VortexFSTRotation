@@ -24,9 +24,13 @@ MatType MatElement(Count i, Count j, const State* basis, const InitVal& inVal, d
 					result += -ph * 1.0 * RotationDiag(orb, orbp, l, jc, rot, inVal);
 			}
 			result += MatType(-ph * EnNonDiag(orb, orbp, l, lp, jc, jcp, inVal), 0.0);
+			result += -ph * 1.0 * RotationNonDiag(orb, orbp, l, lp, jc, jcp, rot, inVal);
 		}
-		if (l == lp && jc == jcp) {
-			result += MatType(0.0, -ph * SocNonDiag(orb, orbp, s, sp));
+		else {
+			if (l == lp && jc == jcp) {
+				result += MatType(0.0, -ph * SocNonDiag(orb, orbp, s));
+			}
+			result += -ph * 1.0 * RotationSocNonDiag(s, orb, orbp, l, lp, jc, jcp, rot, inVal);
 		}
 	}
 	else {
@@ -121,9 +125,9 @@ double EnNonDiag(int orb, int orbp, int l, int lp, int j, int jp, const InitVal&
 	return EnC;
 }
 
-double SocNonDiag(int orb, int orbp, int s, int sp)
+double SocNonDiag(int orb, int orbp, int s)
 {
-	if (s == -1 && sp == 1) {
+	if (s == -1) {
 		if (orb == 0 && orbp == 1) {
 			return 	sqrt(2.0) * lbd2;
 		}
@@ -131,7 +135,7 @@ double SocNonDiag(int orb, int orbp, int s, int sp)
 			return -sqrt(2.0) * lbd2;
 		}
 	}
-	else if (s == 1 && sp == -1) {
+	else {
 		if (orb == 1 && orbp == 0) {
 			return -sqrt(2.0) * lbd2;
 		}
@@ -181,24 +185,96 @@ MatType RotationDiag(int orb, int orbp, int l, int jc, double rot, const InitVal
 		int la = std::abs(l);
 		double alphap = inVal.BesselZeros[la * jmax + j];
 		if (orb == 0) {
-			return MatType(0.25 * t1z * c * c * rot * rot * Rm2 * alphap * alphap, 0.0);
+			return MatType(0.25 * t1z * c * c * rot * rot * alphap * alphap * Rm2, 0.0);
 		}
 		else if (orb == 1 || orb == 2) {
-			return MatType(0.25 * t2z * c * c * rot * rot * Rm2 * alphap * alphap, 0.0);
+			return MatType(0.25 * t2z * c * c * rot * rot * alphap * alphap * Rm2, 0.0);
 		}
 		else {
-			return MatType(0.25 * t4z * c * c * rot * rot * Rm2 * alphap * alphap, 0.0);
+			return MatType(0.25 * t4z * c * c * rot * rot * alphap * alphap * Rm2, 0.0);
 		}
 	}
 	else if ((orb == 0 && orbp == 1) || (orb == 2 && orbp == 0)) {
 		int la = std::abs(l);
 		double alphap = inVal.BesselZeros[la * jmax + j];
-		return MatType(0.0, 0.5 * Gamma * c * rot * Rm2 * alphap * alphap;
+		return MatType(0.0, 0.5 * Gamma * c * rot * alphap * alphap * Rm2);
 	}
 	else if ((orb == 0 && orbp == 2) || (orb == 1 && orbp == 0)) {
 		int la = std::abs(l);
 		double alphap = inVal.BesselZeros[la * jmax + j];
-		return MatType(0.0, -0.5 * Gamma * c * rot * Rm2 * alphap * alphap;
+		return MatType(0.0, -0.5 * Gamma * c * rot * alphap * alphap * Rm2);
+	}
+
+	return MatType(0.0, 0.0);
+}
+
+MatType RotationNonDiag(int orb, int orbp, int l, int lp, int jc, int jcp, double rot, const InitVal& inVal)
+{
+	if (orb == orbp) {
+		if (l == lp + 2 || lp == l + 2) {
+			int la = std::abs(l);
+			int lpa = std::abs(lp);
+			double alpha = inVal.BesselZeros[la * jmax + j];
+			double alphap = inVal.BesselZeros[lpa * jmax + j];
+			double normB = inVal.normBes[la * jmax + jc] * inVal.normBes[lpa * jmax + jcp]; 
+			if (orb == 0) {
+				return MatType(0.125 * t1z * c * c * rot * rot * alphap * alphap * Rm2 * normB * FR(l, lp, jc, jcp, alpha, alphap), 0.0);
+			}
+			else if (orb == 1 || orb == 2) {
+				return MatType(0.125 * t2z * c * c * rot * rot * alphap * alphap * Rm2 * normB * FR(l, lp, jc, jcp, alpha, alphap), 0.0);
+			}
+			else {
+				return MatType(0.125 * t4z * c * c * rot * rot * alphap * alphap * Rm2 * normB * FR(l, lp, jc, jcp, alpha, alphap), 0.0);
+			}
+		}
+	}
+	else if ((orb == 0 && orbp == 1) || (orb == 2 && orbp == 0)) {
+		if (lp == l + 2) {
+			int la = std::abs(l);
+			int lpa = std::abs(lp);
+			double alpha = inVal.BesselZeros[la * jmax + j];
+			double alphap = inVal.BesselZeros[lpa * jmax + j];
+			double normB = inVal.normBes[la * jmax + jc] * inVal.normBes[lpa * jmax + jcp];
+			return MatType(0.0, 0.5 * Gamma * c * rot * alphap * alphap * Rm2 * normB * FR(l, lp, jc, jcp, alpha, alphap));
+		}
+	}
+	else if ((orb == 0 && orbp == 2) || (orb == 1 && orbp == 0)) {
+		if (l == lp + 2) {
+			int la = std::abs(l);
+			int lpa = std::abs(lp);
+			double alpha = inVal.BesselZeros[la * jmax + j];
+			double alphap = inVal.BesselZeros[lpa * jmax + j];
+			double normB = inVal.normBes[la * jmax + jc] * inVal.normBes[lpa * jmax + jcp];
+			return MatType(0.0, -0.5 * Gamma * c * rot * alphap * alphap * Rm2 * normB * FR(l, lp, jc, jcp, alpha, alphap));
+		}
+	}
+
+	return MatType(0.0, 0.0);
+}
+
+MatType RotationSocNonDiag(int s, int orb, int orbp, int l, int lp, int jc, int jcp, double rot, const InitVal& inVal)
+{
+	if (l == lp + 1 || lp == l + 1) {
+		if (s == -1) {
+			if ((orb == 1 && orbp == 3) || (orb == 3 && orbp == 2)) {
+				int la = std::abs(l);
+				int lpa = std::abs(lp);
+				double alpha = inVal.BesselZeros[la * jmax + j];
+				double alphap = inVal.BesselZeros[lpa * jmax + j];
+				double normB = inVal.normBes[la * jmax + jc] * inVal.normBes[lpa * jmax + jcp];
+				return MatType(-c * lbd3 * rot * sqrt2 * alphap * Rm1 * normB * FR(l, lp, jc, jcp, alpha, alphap), 0.0);
+			}
+		}
+		else {
+			if ((orb == 2 && orbp == 3) || (orb == 3 && orbp == 1)) {
+				int la = std::abs(l);
+				int lpa = std::abs(lp);
+				double alpha = inVal.BesselZeros[la * jmax + j];
+				double alphap = inVal.BesselZeros[lpa * jmax + j];
+				double normB = inVal.normBes[la * jmax + jc] * inVal.normBes[lpa * jmax + jcp];
+				return MatType(-c * lbd3 * rot * sqrt2 * alphap * Rm1 * normB * FR(l, lp, jc, jcp, alpha, alphap), 0.0);
+			}
+		}
 	}
 
 	return MatType(0.0, 0.0);
@@ -274,7 +350,7 @@ double IntTan(int l, int lp, double alpha, double alphap)
 
 double FR(int l, int lp, int j, int jp, double alpha, double alphap)
 {
-	if (l == lp) {
+	if (abs(l) == abs(lp)) {
 		if (j == jp) {
 			double BesselJ = gsl_sf_bessel_Jn(l + 1, alpha);
 			return 0.5 * BesselJ * BesselJ;
