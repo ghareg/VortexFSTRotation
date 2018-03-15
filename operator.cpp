@@ -142,7 +142,7 @@ double SocNonDiag(int orb, int orbp, int s, int sp)
 	return 0.0;
 }
 
-double Super(int ph, int orb, int orbp, int l, int lp, int jc, int jcp, const InitVal& inVal)
+double Super(int ph, int orb, int orbp, int l, int lp, int j, int jp, const InitVal& inVal)
 {
 	if (orb == orbp) {
 		if ((ph == -1 && lp == l + 1) || (ph == 1 && l == lp + 1)) {
@@ -152,22 +152,22 @@ double Super(int ph, int orb, int orbp, int l, int lp, int jc, int jcp, const In
 			double sInt = 0.0;
 			if (lp > l) {
 				if (l < 0) {
-					sInt = -inVal.supInt[3 * lpa * jmax * jmax + 3 * jcp * jmax + 3 * jc + 1];
+					sInt = -inVal.supInt[3 * lpa * jmax * jmax + 3 * jp * jmax + 3 * j + 1];
 				}
 				else {
-					sInt = inVal.supInt[3 * la * jmax * jmax + 3 * jc * jmax + 3 * jcp + 1];
+					sInt = inVal.supInt[3 * la * jmax * jmax + 3 * j * jmax + 3 * jp + 1];
 				}
 			}
 			else {
 				if (lp < 0) {
-					sInt = -inVal.supInt[3 * la * jmax * jmax + 3 * jc * jmax + 3 * jcp + 1];
+					sInt = -inVal.supInt[3 * la * jmax * jmax + 3 * j * jmax + 3 * jp + 1];
 				}
 				else {
-					sInt = inVal.supInt[3 * lpa * jmax * jmax + 3 * jcp * jmax + 3 * jc + 1];
+					sInt = inVal.supInt[3 * lpa * jmax * jmax + 3 * jp * jmax + 3 * j + 1];
 				}
 			}
 
-			return DeltaL * inVal.normBes[la * jmax + jc] * inVal.normBes[lpa * jmax + jcp] * sInt;
+			return DeltaL * inVal.normBes[la * jmax + j] * inVal.normBes[lpa * jmax + jp] * sInt;
 		}
 	}
 

@@ -6,7 +6,7 @@ MatType MatElement(Count i, Count j, const State* basis, const InitVal& inVal, d
 double EnDiag(int orb, int orbp, int l, int j, int s, double mu, const InitVal& inVal);
 double EnNonDiag(int orb, int orbp, int l, int lp, int j, int jp, const InitVal& inVal);
 double SocNonDiag(int orb, int orbp, int s, int sp);
-double Super(int ph, int orb, int orbp, int l, int lp, int jc, int jcp, const InitVal& inVal);
+double Super(int ph, int orb, int orbp, int l, int lp, int j, int jp, const InitVal& inVal);
 
 struct intBparams {int l; int lp; double alpha; double alphap;};
 double IntB (double r, void *paramsIntB);

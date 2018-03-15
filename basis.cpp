@@ -17,6 +17,7 @@ void GenerateBasis(State*& basis, Count& bSize)
 	int les[16] = {-7, -10, -8, -9, -8, -7, -9, -10, -6, -9, -7, -8, -7, -6, -8, -9}; // Eig C4 -i
 	int lee[16] = {9, 6, 8, 7, 8, 9, 7, 6, 10, 7, 9, 8, 9, 10, 8, 7}; // Eig C4 -i
 
+	//int le0[16] = {-1, -2, 0, -1, 0, -1, 1, 0, 0, -1, 1, 0, 1, 0, 2, 1}; //Eig of l=0
 	for (int ph = -1; ph <= 1; ph += 2) {
 		ls = (ph == -1) ? -lmax : -lmax + 1;
 		le = (ph == -1) ? lmax - 1 : lmax;
