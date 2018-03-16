@@ -9,13 +9,6 @@
 #include <algorithm>
 #include <gsl/gsl_errno.h>
 
-void GenerateBesselZeros(double*& BesselZeros, Count& BesselSize);
-void GenerateNormBes(double*& normBes, Count& NormBesSize, const double* BesselZeros);
-void GenerateSupIntParallel(double*& supInt, Count& supIntSize, const double* BesselZeros, int stage);
-void GenerateSupInt(double* supInt, int jStart, int jEnd, Count& lSupIntSize, const double* BesselZeros);
-void free(SparseMat& baseHam, InitVal& inVal, double* evalues, MatType* evecs);
-void freeN(SparseMat& baseNHam);
-
 struct eigen {
 	double value;
 	const MatType *vector;
@@ -24,6 +17,15 @@ struct eigen {
 		return value < other.value;
 	}
 };
+
+void GenerateBesselZeros(double*& BesselZeros, Count& BesselSize);
+void GenerateNormBes(double*& normBes, Count& NormBesSize, const double* BesselZeros);
+void GenerateSupIntParallel(double*& supInt, Count& supIntSize, const double* BesselZeros, int stage);
+void GenerateSupInt(double* supInt, int jStart, int jEnd, Count& lSupIntSize, const double* BesselZeros);
+void sortEValues(eigen* eval, const double* evalues, const MatType* evecs, Count bSize);
+void CalcLz(const int* eign, int nsize, double* Lzn, const eigen* eval, const State* basis, Count bSize, const InitVal& inVal);
+void free(SparseMat& baseHam, InitVal& inVal, double* evalues, MatType* evecs);
+void freeN(SparseMat& baseNHam);
 
 int main(void)
 {
@@ -48,11 +50,12 @@ int main(void)
 	bool matrixCons = false;
 	double* evalues = new double[neigs];
 	MatType* evecs = new MatType[neigs * bSize];
+	eigen* eval = new eigen[neigs];
 	GenMatProd op;
 	FILE* evalFile;
-	evalFile = fopen("EndepMul10j300R5000xi3C4mi.dat", "w");
-	double mu = 40.0;
-	double muEnd = 51.0;
+	evalFile = fopen("EndepMul10j300R5000xi3C4miLz.dat", "w");
+	double mu = 48.15;
+	double muEnd = 48.15;
 	double dmu = 0.025;
 	while (mu <= muEnd) {
 		fprintf(evalFile, "%.6f\t", mu);
@@ -71,13 +74,29 @@ int main(void)
 		}
 		
 		calcEValues(baseHam, op, evalues, evecs);
+		sortEValues(eval, evalues, evecs, bSize);
 
-		std::sort(&evalues[0], &evalues[0] + neigs);
+		const int nsize = 6;
+		const int eign[nsize] = {neigs / 2 - 3, neigs / 2 - 2, neigs / 2 - 1, neigs / 2, neigs / 2 + 1, neigs / 2 + 2};
+		double Lzn[nsize];
+		CalcLz(eign, nsize, Lzn, eval, basis, bSize, inVal);
+
 
 		for (int i = 0; i < neigs; ++i) {
-			fprintf(evalFile, "\t%.6f", evalues[i]);
+			fprintf(evalFile, "\t%.6f", eval[i].value);
 		}
 		fprintf(evalFile, "\n");
+
+		for (int i = 0; i < nsize; ++i) {
+			fprintf(evalFile, "%.6f\t", eval[eign[i]].value);
+		}
+		fprintf(evalFile, "\n");
+
+		for (int i = 0; i < nsize; ++i) {
+			fprintf(evalFile, "%.6f\t", Lzn[i]);
+		}
+		fprintf(evalFile, "\n");
+
 		mu += dmu;
 		fflush(evalFile);
 	}
@@ -85,6 +104,34 @@ int main(void)
 	fclose(evalFile);
 	free(baseHam, inVal, evalues, evecs);
 	freeN(baseFHam);
+	delete[] eval;
+}
+
+void sortEValues(eigen* eval, const double* evalues, const MatType* evecs, Count bSize)
+{
+	for (int i = 0; i < neigs; ++i) {
+		eval[i].value = evalues[i];
+		eval[i].vector = &evecs[i * bSize];
+	}
+	std::sort(&eval[0], &eval[0] + neigs);
+}
+
+void CalcLz(const int* eign, int nsize, double* Lzn, const eigen* eval, const State* basis, Count bSize, const InitVal& inVal)
+{
+	for (int i = 0; i < nsize; ++i) {
+		Lzn[i] = 0.0;
+	}
+	int Lz[16] = {1, 2, 0, 1, 0, 1, -1, 0, 0, 1, -1, 0, -1, 0, -2, -1};
+
+	for (int k = 0; k < nsize; ++k) {
+		for (Count i = 0; i < bSize; i += 1) {
+			Occup ph = basis[i].ph();
+			Occup s = basis[i].s();
+			Occup orb = basis[i].orb();
+			Occup l = basis[i].l();
+			Lzn[k] += (l + Lz[(ph + 1) * 4 + (s + 1) * 2 + orb]) * std::norm(eval[eign[k]].vector[i]);
+		}
+	}
 }
 
 void GenerateBesselZeros(double*& BesselZeros, Count& BesselSize)
